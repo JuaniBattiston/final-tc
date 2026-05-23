@@ -5,8 +5,8 @@ com/compilador/MiLenguajeParser$ExpresionContext.class
 com/compilador/MiLenguajeParser$AsigArregloContext.class
 com/compilador/semantico/Symbol.class
 com/compilador/App$1.class
-com/compilador/MiLenguajeVisitor.class
 com/compilador/semantico/Symbol$Categoria.class
+com/compilador/MiLenguajeVisitor.class
 com/compilador/MiLenguajeParser$ExprNegativoContext.class
 com/compilador/MiLenguajeParser$ExprAndContext.class
 com/compilador/MiLenguajeParser$ExprCadenaContext.class

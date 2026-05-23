@@ -28,6 +28,7 @@ public class Symbol {
     private final String    tipo;
     private final Categoria categoria;
     private       boolean   inicializado; // mutable: puede cambiar de false → true
+    private       boolean   usado;        // true si el símbolo aparece en alguna expresión (lectura)
     private final int       linea;
     private final int       columna;
 
@@ -37,6 +38,7 @@ public class Symbol {
         this.tipo         = tipo;
         this.categoria    = categoria;
         this.inicializado = inicializado;
+        this.usado        = false;
         this.linea        = linea;
         this.columna      = columna;
     }
@@ -69,12 +71,18 @@ public class Symbol {
     public String    getTipo()        { return tipo;         }
     public Categoria getCategoria()   { return categoria;    }
     public boolean   isInicializado() { return inicializado; }
+    public boolean   isUsado()        { return usado;        }
     public int       getLinea()       { return linea;        }
     public int       getColumna()     { return columna;      }
 
     /** Llamado por SemanticAnalyzer cuando visita una asignación a esta variable. */
     public void setInicializado(boolean inicializado) {
         this.inicializado = inicializado;
+    }
+
+    /** Llamado por SemanticAnalyzer cuando el símbolo aparece en una expresión (lectura). */
+    public void setUsado(boolean usado) {
+        this.usado = usado;
     }
 
     @Override
