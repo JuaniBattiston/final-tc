@@ -1,4 +1,4 @@
-// Generated from com/compilador/MiLenguaje.g4 by ANTLR 4.9.3
+// Generated from com\compilador\MiLenguaje.g4 by ANTLR 4.9.3
 package com.compilador;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

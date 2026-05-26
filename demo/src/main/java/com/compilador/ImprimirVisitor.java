@@ -59,7 +59,7 @@ public class ImprimirVisitor extends MiLenguajeBaseVisitor<String> {
     //  ctx.expresion() → el valor inicial (puede ser null)
     // =========================================================
     @Override
-    public String visitDeclVariable(MiLenguajeParser.DeclVariableContext ctx) {
+    public String visitDeclaracion(MiLenguajeParser.DeclaracionContext ctx) {
         String tipo  = ctx.tipo().getText();
         String nombre = ctx.ID().getText();
         boolean tieneValor = ctx.expresion() != null;
@@ -74,12 +74,6 @@ public class ImprimirVisitor extends MiLenguajeBaseVisitor<String> {
         return null;
     }
 
-    @Override
-    public String visitDeclArreglo(MiLenguajeParser.DeclArregloContext ctx) {
-        imprimir("DECLARACION ARREGLO → " + ctx.tipo().getText() + " " + ctx.ID().getText() + "[...]");
-        return null;
-    }
-
     // =========================================================
     //  REGLA: asignacion
     //  Ejemplo: x = x + 1;
@@ -87,20 +81,10 @@ public class ImprimirVisitor extends MiLenguajeBaseVisitor<String> {
     //  ctx.expresion() → el nuevo valor
     // =========================================================
     @Override
-    public String visitAsigVariable(MiLenguajeParser.AsigVariableContext ctx) {
+    public String visitAsignacion(MiLenguajeParser.AsignacionContext ctx) {
         imprimir("ASIGNACION → " + ctx.ID().getText() + " = ...");
         nivel++;
         visit(ctx.expresion());
-        nivel--;
-        return null;
-    }
-
-    @Override
-    public String visitAsigArreglo(MiLenguajeParser.AsigArregloContext ctx) {
-        imprimir("ASIGNACION ARREGLO → " + ctx.ID().getText() + "[...] = ...");
-        nivel++;
-        visit(ctx.expresion(0));
-        visit(ctx.expresion(1));
         nivel--;
         return null;
     }
