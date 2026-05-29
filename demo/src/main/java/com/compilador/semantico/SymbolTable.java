@@ -56,16 +56,23 @@ public class SymbolTable {
     }
 
     /**
-     * Cierra el scope actual volviendo a su padre.
+     * Cierra el scope actual volviendo a su padre y devuelve el scope cerrado.
      * Los símbolos del scope cerrado dejan de ser visibles, pero el scope
      * permanece en el historial para que imprimirTabla() lo muestre.
+     * El caller puede usar el scope devuelto para emitir advertencias de variables no usadas.
      */
-    public void salirScope() {
+    public Scope salirScope() {
+        Scope cerrado = scopeActual;
         // La guardia evita salir del scope global (que no tiene padre).
-        // Sin ella, un '}' extra en el fuente podría causar NPE al subir.
         if (scopeActual.getPadre() != null) {
             scopeActual = scopeActual.getPadre();
         }
+        return cerrado;
+    }
+
+    /** Devuelve el scope global (raíz), útil para chequeos al final del análisis. */
+    public Scope getScopeGlobal() {
+        return historial.get(0);
     }
 
     /**

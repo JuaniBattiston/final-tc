@@ -57,6 +57,22 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
         ));
     }
 
+    private void warning(int linea, int columna, String mensaje) {
+        advertencias.add(new SemanticError(linea, columna, mensaje, SemanticError.Severidad.ADVERTENCIA));
+    }
+
+    // Emite una advertencia por cada VARIABLE o ARREGLO del scope que nunca fue leído.
+    private void emitirAdvertenciasNoUsadas(Scope scope) {
+        for (Symbol s : scope.getSimbolos()) {
+            if ((s.getCategoria() == Symbol.Categoria.VARIABLE
+                 || s.getCategoria() == Symbol.Categoria.ARREGLO)
+                    && !s.isUsado()) {
+                warning(s.getLinea(), s.getColumna(),
+                        "variable '" + s.getNombre() + "' declarada pero nunca utilizada.");
+            }
+        }
+    }
+
     public List<SemanticError> getErrores()       { return errores;               }
     public List<SemanticError> getAdvertencias()  { return advertencias;          }
     public boolean             hayErrores()        { return !errores.isEmpty();    }
@@ -67,8 +83,10 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
 
     @Override
     public String visitPrograma(MiLenguajeParser.ProgramaContext ctx) {
-        // Punto de entrada: visita todas las sentencias del programa de arriba a abajo.
-        return visitChildren(ctx);
+        visitChildren(ctx);
+        // Al terminar el programa chequeamos el scope global para variables no usadas.
+        emitirAdvertenciasNoUsadas(tabla.getScopeGlobal());
+        return null;
     }
 
     // ── Sentencias ───────────────────────────────────────────────────────────
@@ -138,7 +156,13 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
 
         if (simbolo == null) {
             error(token, "variable '" + nombre + "' no fue declarada.");
-            // Visitamos la expresión de todas formas para detectar errores dentro de ella.
+            visit(ctx.expresion());
+            return null;
+        }
+
+        // No se puede asignar directamente a un nombre de función.
+        if (simbolo.getCategoria() == Symbol.Categoria.FUNCION) {
+            error(token, "'" + nombre + "' es una función y no puede usarse como variable en una asignación.");
             visit(ctx.expresion());
             return null;
         }
@@ -244,7 +268,7 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
         // Las variables declaradas adentro dejan de existir al salir.
         tabla.entrarScope("bloque");
         visitChildren(ctx);
-        tabla.salirScope();
+        emitirAdvertenciasNoUsadas(tabla.salirScope());
         return null;
     }
 
@@ -285,7 +309,7 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
         visitChildren(ctx.bloque());
 
         tipoRetornoActual = tipoAnterior;
-        tabla.salirScope();
+        emitirAdvertenciasNoUsadas(tabla.salirScope());
         return null;
     }
 
@@ -488,6 +512,7 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
             error(token, "el índice de un arreglo debe ser 'int', pero es '" + tipoIndice + "'.");
         }
 
+        simbolo.setUsado(true);
         return simbolo.getTipo();
     }
 
@@ -510,6 +535,7 @@ public class SemanticAnalyzer extends MiLenguajeBaseVisitor<String> {
             warning(token, "variable '" + nombre + "' podría no estar inicializada.");
         }
 
+        simbolo.setUsado(true);
         return simbolo.getTipo();
     }
 }
