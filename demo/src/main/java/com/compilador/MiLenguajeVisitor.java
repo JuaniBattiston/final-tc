@@ -1,4 +1,4 @@
-// Generated from com/compilador/MiLenguaje.g4 by ANTLR 4.9.3
+// Generated from com\compilador\MiLenguaje.g4 by ANTLR 4.9.3
 package com.compilador;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -23,19 +23,11 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitSentencia(MiLenguajeParser.SentenciaContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code declVariable}
-	 * labeled alternative in {@link MiLenguajeParser#declaracion}.
+	 * Visit a parse tree produced by {@link MiLenguajeParser#declaracion}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDeclVariable(MiLenguajeParser.DeclVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code declArreglo}
-	 * labeled alternative in {@link MiLenguajeParser#declaracion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDeclArreglo(MiLenguajeParser.DeclArregloContext ctx);
+	T visitDeclaracion(MiLenguajeParser.DeclaracionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiLenguajeParser#tipo}.
 	 * @param ctx the parse tree
@@ -43,19 +35,11 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitTipo(MiLenguajeParser.TipoContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code asigVariable}
-	 * labeled alternative in {@link MiLenguajeParser#asignacion}.
+	 * Visit a parse tree produced by {@link MiLenguajeParser#asignacion}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitAsigVariable(MiLenguajeParser.AsigVariableContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code asigArreglo}
-	 * labeled alternative in {@link MiLenguajeParser#asignacion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAsigArreglo(MiLenguajeParser.AsigArregloContext ctx);
+	T visitAsignacion(MiLenguajeParser.AsignacionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiLenguajeParser#sentenciaCout}.
 	 * @param ctx the parse tree
@@ -80,30 +64,6 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBloque(MiLenguajeParser.BloqueContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MiLenguajeParser#declaracionFuncion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitDeclaracionFuncion(MiLenguajeParser.DeclaracionFuncionContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MiLenguajeParser#listaParametros}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitListaParametros(MiLenguajeParser.ListaParametrosContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MiLenguajeParser#parametro}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitParametro(MiLenguajeParser.ParametroContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MiLenguajeParser#sentenciaReturn}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSentenciaReturn(MiLenguajeParser.SentenciaReturnContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprIdentificador}
 	 * labeled alternative in {@link MiLenguajeParser#expresion}.
@@ -146,13 +106,6 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExprFalso(MiLenguajeParser.ExprFalsoContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprLlamada}
-	 * labeled alternative in {@link MiLenguajeParser#expresion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprLlamada(MiLenguajeParser.ExprLlamadaContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprOr}
 	 * labeled alternative in {@link MiLenguajeParser#expresion}.
@@ -223,11 +176,4 @@ public interface MiLenguajeVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExprDecimal(MiLenguajeParser.ExprDecimalContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprAccesoArray}
-	 * labeled alternative in {@link MiLenguajeParser#expresion}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprAccesoArray(MiLenguajeParser.ExprAccesoArrayContext ctx);
 }
