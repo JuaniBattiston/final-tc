@@ -80,6 +80,15 @@ public class ImprimirVisitor extends MiLenguajeBaseVisitor<String> {
         return null;
     }
 
+    @Override
+    public String visitDeclaracionFuncion(MiLenguajeParser.DeclaracionFuncionContext ctx) {
+        imprimir("FUNCION → " + ctx.tipo().getText() + " " + ctx.ID().getText() + "(...)");
+        nivel++;
+        visitChildren(ctx);
+        nivel--;
+        return null;
+    }
+
     // =========================================================
     //  REGLA: asignacion
     //  Ejemplo: x = x + 1;
@@ -98,10 +107,6 @@ public class ImprimirVisitor extends MiLenguajeBaseVisitor<String> {
     @Override
     public String visitAsigArreglo(MiLenguajeParser.AsigArregloContext ctx) {
         imprimir("ASIGNACION ARREGLO → " + ctx.ID().getText() + "[...] = ...");
-        nivel++;
-        visit(ctx.expresion(0));
-        visit(ctx.expresion(1));
-        nivel--;
         return null;
     }
 

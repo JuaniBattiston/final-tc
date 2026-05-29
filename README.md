@@ -1,7 +1,7 @@
 # Compilador Educativo — Mini Lenguaje C++
 
 Proyecto de Técnicas de Compilación.  
-Implementa las **tres primeras fases** de un compilador: análisis léxico, análisis sintáctico y análisis semántico.
+Implementa las dos primeras fases de un compilador: **análisis léxico** y **análisis sintáctico**.
 
 ---
 
@@ -10,21 +10,13 @@ Implementa las **tres primeras fases** de un compilador: análisis léxico, aná
 ```
 demo/
 ├── src/main/antlr4/com/compilador/
-│   └── MiLenguaje.g4                   <- gramática ANTLR4 (lexer + parser)
+│   └── MiLenguaje.g4          <- gramática ANTLR4 (lexer + parser)
 ├── src/main/java/com/compilador/
-│   ├── App.java                         <- punto de entrada (3 fases)
-│   └── semantico/
-│       ├── SemanticAnalyzer.java        <- visitor de análisis semántico
-│       ├── SymbolTable.java             <- tabla de símbolos con scopes
-│       ├── Scope.java                   <- un ámbito de nombres
-│       ├── Symbol.java                  <- un símbolo (variable)
-│       ├── TypeSystem.java              <- reglas de compatibilidad de tipos
-│       └── SemanticError.java           <- registro de error semántico
-├── ejemplo.txt                          <- programa válido (sintáctico)
-├── ejemplo_error.txt                    <- programa con errores sintácticos
-├── ejemplo_semantico.txt                <- programa válido (semántico)
-├── ejemplo_semantico_error.txt          <- programa con 10 errores semánticos
-└── pom.xml                              <- configuración Maven
+│   ├── App.java                <- punto de entrada
+│   └── ImprimirVisitor.java    <- visitor educativo
+├── ejemplo.txt                 <- programa válido de prueba
+├── ejemplo_error.txt           <- programa con errores sintácticos
+└── pom.xml                     <- configuración Maven
 ```
 
 Archivos **generados automáticamente** por ANTLR4 (no editarlos):
@@ -45,14 +37,10 @@ src/main/java/com/compilador/
 cd demo
 mvn clean package
 
-# 2. Ejecutar con el programa semántico válido
-java -jar target/demo-1.0-jar-with-dependencies.jar ejemplo_semantico.txt
-
-# 3. Ejecutar con el programa con errores semánticos
-java -jar target/demo-1.0-jar-with-dependencies.jar ejemplo_semantico_error.txt
-
-# 4. Ejecutar con programas de prueba sintáctica
+# 2. Ejecutar con el programa de ejemplo válido
 java -jar target/demo-1.0-jar-with-dependencies.jar ejemplo.txt
+
+# 3. Ejecutar con el programa de ejemplo con errores
 java -jar target/demo-1.0-jar-with-dependencies.jar ejemplo_error.txt
 ```
 
@@ -60,10 +48,12 @@ java -jar target/demo-1.0-jar-with-dependencies.jar ejemplo_error.txt
 
 ## Salida del programa
 
-Al ejecutarse con un archivo válido, el compilador produce:
+Al ejecutarse con un archivo válido, el programa produce:
+
+### En consola
 
 ```
-Analizando archivo: ejemplo_semantico.txt
+Analizando archivo: ejemplo.txt
 =================================================================
 
 === FASE 1: ANÁLISIS LÉXICO ===
@@ -71,10 +61,10 @@ Analizando archivo: ejemplo_semantico.txt
   TIPO DE TOKEN        LEXEMA                    LÍNEA    COLUMNA
   ---------------------------------------------------------------
   INT                  int                       1        0
-  ID                   entero                    1        4
-  IGUAL                =                         1        11
-  INTEGER              42                        1        13
-  PYC                  ;                         1        15
+  ID                   x                         1        4
+  IGUAL                =                         1        6
+  INTEGER              10                        1        8
+  PYC                  ;                         1        10
   ...
 
   Análisis léxico completado sin errores.
@@ -83,617 +73,353 @@ Analizando archivo: ejemplo_semantico.txt
 
   Análisis sintáctico completado sin errores.
 
-=== FASE 3: ANÁLISIS SEMÁNTICO ===
-
-  Análisis semántico completado sin errores.
-
-  === TABLA DE SÍMBOLOS ===
-
-  Scope: global
-  +------------------+--------+-----------+-------------+
-  | Nombre           | Tipo   | Inicializ | Línea       |
-  +------------------+--------+-----------+-------------+
-  | entero           | int    | SI        | 1:4         |
-  | decimal          | float  | SI        | 2:7         |
-  | ...                                                  |
-  +------------------+--------+-----------+-------------+
-
 =================================================================
   Compilacion exitosa.
 
   Abriendo visualizador grafico del arbol...
 ```
 
-Se abre además una **ventana gráfica** (Swing) con el árbol de parseo completo, navegable con zoom y scroll.
+### Ventana gráfica (Swing)
+
+Se abre automáticamente una ventana con el árbol de parseo completo, generada con `TreeViewer` de ANTLR4.
+
+```
++---------------------------+
+|  Árbol de Parseo          |
+|                           |
+|       programa            |
+|      /   |   \            |
+| decl  asig  while         |
+|  ...   ...   ...          |
++---------------------------+
+```
+
+La ventana soporta zoom y scroll para navegar árboles grandes.
 
 ---
 
 ---
 
-# Guía educativa — Tres Fases de Análisis
+# Guía educativa — Análisis Sintáctico
 
 ---
 
-## 1. Introducción
+## 1. ¿Qué es el análisis sintáctico?
 
-Un compilador convierte código fuente en código ejecutable a través de varias fases. Este proyecto implementa las tres primeras:
+El **análisis léxico** convierte el texto en tokens (palabras).  
+El **análisis sintáctico** verifica que esas palabras forman **frases con sentido**.
+
+Analogía con el lenguaje natural:
 
 ```
-Código fuente (.txt)
-       |
-       v
-+-------------+     tokens      +--------------+     árbol       +--------------+
-|  FASE 1     | --------------> |   FASE 2     | -------------> |   FASE 3     |
-|  LÉXICA     |                 |  SINTÁCTICA  |                |  SEMÁNTICA   |
-+-------------+                 +--------------+                +--------------+
-  Lexer                           Parser                          Visitor
-  MiLenguajeLexer                 MiLenguajeParser                SemanticAnalyzer
+Frase:  "El gato come pescado"   -> estructura válida
+Frase:  "Gato el pescado come"   -> palabras correctas, estructura inválida
 ```
+
+En programación:
+
+```
+int x = 5;          -> tokens válidos, estructura válida      OK
+int = x 5;          -> tokens válidos, estructura inválida    ERROR
+```
+
+El análisis sintáctico NO verifica el significado (eso es análisis semántico).  
+Solo verifica que la **estructura** respeta las reglas de la gramática.
 
 ---
 
-## 2. Arquitectura del proyecto
+## 2. ¿Qué hace esta gramática?
 
-### Paquete principal (`com.compilador`)
+Este proyecto implementa un **mini lenguaje inspirado en C++** con:
 
-- **`App.java`** — Punto de entrada. Orquesta las tres fases secuencialmente. Si una fase falla, las siguientes no se ejecutan (excepto la semántica, que acumula errores).
-- **`MiLenguaje.g4`** — Gramática que define tanto el lexer como el parser.
+| Construcción         | Ejemplo                           |
+|----------------------|-----------------------------------|
+| Declaración          | `int x = 10;`                     |
+| Asignación           | `x = x + 1;`                      |
+| Salida               | `cout << x;`                      |
+| Condicional          | `if (x > 0) { ... } else { ... }` |
+| Bucle                | `while (x < 100) { ... }`         |
+| Expresiones          | `(x + y) * 2`                     |
+| Tipos                | `int float double char string bool`|
 
-### Paquete semántico (`com.compilador.semantico`)
-
-```
-SemanticAnalyzer          <- Visitor que recorre el árbol de parseo
-      |
-      +--- SymbolTable    <- Gestiona el stack de scopes
-              |
-              +--- Scope  <- Un ámbito: mapa nombre -> Symbol
-                    |
-                    +--- Symbol    <- Un símbolo: nombre, tipo, inicializado
-      |
-      +--- TypeSystem     <- Reglas de compatibilidad de tipos
-      |
-      +--- SemanticError  <- Un error con línea, columna y mensaje
-```
-
-### Flujo de datos
-
-```
-programa                          SemanticAnalyzer.visit(árbol)
-   |                                      |
-   +--> visitDeclaracion()         SymbolTable.definir(Symbol)
-   |         |                            |
-   |         +--> visit(expresion)  TypeSystem.esCompatibleAsignacion()
-   |
-   +--> visitSentenciaIf()         TypeSystem.BOOL check en condición
-   |         |
-   |         +--> visitBloque()    SymbolTable.entrarScope / salirScope
-   |
-   +--> visitExprIdentificador()   SymbolTable.resolver() → tipo de la variable
-```
-
----
-
-## 3. Tabla de símbolos
-
-La tabla de símbolos registra cada variable declarada y gestiona los **ámbitos** (scopes).
-
-### Estructura de clases
-
-#### `Symbol` — un símbolo individual
-
-```java
-Symbol {
-    String   nombre       // "x"
-    String   tipo         // "int", "float", "string", ...
-    Categoria categoria   // VARIABLE, FUNCION, PARAMETRO
-    boolean  inicializado // true si fue asignada algún valor
-    int      linea        // línea de declaración
-    int      columna      // columna de declaración
-}
-```
-
-#### `Scope` — un ámbito de nombres
-
-```java
-Scope {
-    String                     nombre  // "global", "bloque_1", "bloque_2", ...
-    Scope                      padre   // scope que lo contiene (null en global)
-    LinkedHashMap<String, Symbol> simbolos
-}
-```
-
-- `definir(Symbol)` — agrega un símbolo; retorna `false` si ya existe localmente (redeclaración).
-- `resolver(String)` — busca el nombre en este scope; si no lo encuentra, sube al padre. Así funciona la visibilidad de scopes.
-- `estaDefinidoLocalmente(String)` — solo busca en el scope actual (para detectar redeclaraciones).
-
-#### `SymbolTable` — gestión de la pila de scopes
-
-```java
-SymbolTable {
-    Scope scopeActual   // siempre apunta al scope más interno
-    List<Scope> historial  // todos los scopes creados (para imprimir la tabla)
-}
-```
-
-Métodos principales:
-- `entrarScope(String nombre)` — crea un nuevo scope hijo del actual.
-- `salirScope()` — vuelve al scope padre.
-- `definir(Symbol)` — agrega en el scope actual.
-- `resolver(String)` — busca desde el scope actual hacia arriba.
-
-### Ciclo de vida de un scope
-
-```
-visitBloque() → tabla.entrarScope("bloque")
-    visitDeclaracion(int local = ...)  → tabla.definir(Symbol{"local","int"})
-    visitExprIdentificador(local)      → tabla.resolver("local") → encontrado
-tabla.salirScope()
-// "local" ya no existe
-visitExprIdentificador(local)         → tabla.resolver("local") → null → ERROR
-```
-
----
-
-## 4. Sistema de tipos
-
-La clase `TypeSystem` centraliza **todas** las reglas de compatibilidad. Ninguna otra clase toma decisiones de tipos directamente.
-
-### Tipos del lenguaje
-
-| Tipo | Descripción | Ejemplo |
-|------|-------------|---------|
-| `int` | Número entero | `int x = 42;` |
-| `float` | Número decimal | `float pi = 3.14;` |
-| `double` | Decimal alta precisión | `double d = 2.718;` |
-| `char` | Un carácter | `char c = 'A';` |
-| `string` | Cadena de texto | `string s = "hola";` |
-| `bool` | Booleano | `bool b = true;` |
-| `void` | Sin valor (reservado para funciones) | — |
-| `ERROR` | Sentinel interno — error ya reportado | — |
-
-### Jerarquía numérica
-
-```
-int  <  float  <  double
-```
-
-Las operaciones entre numéricos retornan el tipo de mayor precisión:
-- `int + int` → `int`
-- `int + float` → `float`
-- `float + double` → `double`
-
-### Compatibilidad de asignación
-
-| Variable (hacia) | Tipos aceptados (desde) |
-|-----------------|------------------------|
-| `int` | `int` |
-| `float` | `int`, `float`, `double` (ampliación numérica) |
-| `double` | `int`, `float`, `double` (ampliación numérica) |
-| `char` | `char` |
-| `string` | `string` |
-| `bool` | `bool` |
-
-### Reglas por operador
-
-| Operador | Operandos requeridos | Resultado |
-|----------|---------------------|-----------|
-| `+`, `-`, `*`, `/`, `%` | Ambos numéricos | Tipo más preciso |
-| `<`, `>`, `<=`, `>=` | Ambos numéricos | `bool` |
-| `==`, `!=` | Mismo tipo o ambos numéricos | `bool` |
-| `&&`, `\|\|` | Ambos `bool` | `bool` |
-| `!` | `bool` | `bool` |
-| `-` (unario) | Numérico | Mismo tipo |
-
-### El tipo ERROR
-
-`ERROR` es un centinela especial que se propaga sin generar errores adicionales.
-
-```
-string texto = "hola";
-int suma = texto + 5;
-         ^^^^^^^^^
-         inferirAritmetico("string", "int") → ERROR
-         → se reporta UN solo error, no uno por cada uso posterior de "suma"
-```
-
----
-
-## 5. Qué errores detecta el analizador semántico
-
-El análisis semántico NO verifica estructura (eso ya lo hizo el parser).
-Verifica que el programa tenga **sentido**: tipos correctos, variables declaradas, condiciones booleanas, etc.
-
----
-
-### Uso de variables no declaradas
-
-Si usás una variable que nunca fue declarada, el analizador lo detecta.
-
-```cpp
-int resultado = z + 1;   // ERROR: 'z' no existe
-```
-```
-Error semántico: variable 'z' no fue declarada.
-```
-
----
-
-### Declarar la misma variable dos veces en el mismo bloque
-
-No podés tener dos variables con el mismo nombre en el mismo ámbito.
+### Programa de ejemplo
 
 ```cpp
 int x = 10;
-int x = 20;   // ERROR: x ya existe
-```
-```
-Error semántico: variable 'x' ya fue declarada en este ámbito.
-```
+int y = 20;
 
-Nota: sí es válido tener una variable `x` global y otra `x` dentro de un `if { }`, porque están en **ámbitos distintos**.
+x = x + y;
 
----
-
-### Asignar un tipo incompatible
-
-Cada variable tiene un tipo fijo. No podés guardar un texto en un `int`, ni un número en un `bool`.
-
-```cpp
-bool activo = 42;        // ERROR: 42 es int, no bool
-string nombre = "Juan";
-nombre = 99;             // ERROR: 99 es int, no string
-```
-```
-Error semántico: no se puede asignar tipo 'int' a variable de tipo 'bool'.
-Error semántico: no se puede asignar tipo 'int' a variable de tipo 'string'.
-```
-
-Lo que sí está permitido es asignar un `int` a un `float` o `double` (el número se amplía automáticamente):
-
-```cpp
-float f = 10;      // OK: int → float, se convierte solo
-double d = 3.14;   // OK: mismo tipo
-```
-
----
-
-### Usar una variable sin inicializar
-
-Si declarás una variable pero nunca le asignás un valor, el analizador avisa.
-
-```cpp
-int sinValor;
-int uso = sinValor + 1;   // AVISO: sinValor podría no estar inicializada
-```
-```
-Error semántico: variable 'sinValor' podría no estar inicializada.
-```
-
----
-
-### Operaciones aritméticas con tipos que no son números
-
-Los operadores `+`, `-`, `*`, `/`, `%` solo funcionan con `int`, `float` o `double`.
-
-```cpp
-string texto = "hola";
-int suma = texto + 5;   // ERROR: no tiene sentido sumar texto y número
-```
-```
-Error semántico: el operador '+' no puede aplicarse a tipos 'string' e 'int'.
-```
-
-Cuando se mezclan tipos numéricos, el resultado es el tipo más preciso:
-```cpp
-int    a = 5;
-double b = 3.14;
-double c = a + b;   // OK: int + double = double
-```
-
----
-
-### Operadores lógicos con tipos que no son bool
-
-Los operadores `&&`, `||`, `!` solo funcionan con valores `true`/`false`.
-
-```cpp
-int a = 5;
-int b = 3;
-bool cond = a && b;   // ERROR: && necesita dos bool, no dos int
-
-int num = 5;
-bool negado = !num;   // ERROR: ! necesita un bool, no un int
-```
-```
-Error semántico: el operador '&&' no puede aplicarse a tipos 'int' e 'int'.
-Error semántico: el operador '!' no puede aplicarse al tipo 'int'.
-```
-
----
-
-### Condición del `if` o `while` que no es booleana
-
-La condición entre paréntesis **siempre debe ser `bool`**. Un número o texto no es una condición válida.
-
-```cpp
-int valor = 10;
-if (valor) { ... }      // ERROR: valor es int, no bool
-
-string s = "hola";
-while (s) { ... }       // ERROR: s es string, no bool
-```
-```
-Error semántico: la condición del 'if' debe ser bool, pero es 'int'.
-Error semántico: la condición del 'while' debe ser bool, pero es 'string'.
-```
-
-Para corregirlo, usá una comparación que dé `bool`:
-```cpp
-if (valor > 0) { ... }     // OK: > produce bool
-while (s != "") { ... }    // OK: != produce bool
-```
-
----
-
-### Errores en funciones
-
-```cpp
-// 'return' fuera de cualquier función
-return 42;
-// Error semántico: 'return' usado fuera de una función.
-
-// Función declarada como 'int' pero retorna texto
-int getDato() {
-    return "hola";
-}
-// Error semántico: tipo de retorno 'string' no es compatible con 'int'.
-
-// Función 'void' no puede retornar un valor
-void nada() {
-    return 1;
-}
-// Error semántico: función 'void' no puede retornar un valor.
-
-// Función no-void que no retorna nada
-int sinRetorno() {
-    return;
-}
-// Error semántico: función de tipo 'int' debe retornar un valor.
-```
-
----
-
-### Ámbitos (scopes): variables que "viven" solo dentro de un bloque
-
-Cada par de llaves `{ }` crea un ámbito nuevo. Las variables declaradas adentro **no existen fuera**.
-
-```cpp
-int x = 1;          // scope global
-
-if (x > 0) {
-    int local = 5;  // existe solo dentro de este if
-    cout << local;  // OK
+if (x > 10) {
+    cout << x;
 }
 
-cout << local;      // ERROR: 'local' ya no existe aquí
-```
-
-Esto es correcto en el compilador porque la tabla de símbolos se "limpia" al salir de cada bloque.
-
----
-
-## 6. Cómo se reportan los errores
-
-### El analizador no se detiene al primer error
-
-A diferencia de la fase léxica y sintáctica (que detienen el análisis cuando encuentran un error), el analizador semántico **acumula todos los errores** y los muestra al final.
-
-Esto es útil para el programador: en lugar de corregir un error, compilar, ver el siguiente, compilar de nuevo... ve todos los errores de una sola vez.
-
-Ejemplo con tres errores en el mismo archivo:
-```
-=== FASE 3: ANÁLISIS SEMÁNTICO ===
-
-  ❌ ERRORES SEMÁNTICOS (3):
-
-  [Línea 3:16]  Error semántico: variable 'z' no fue declarada.
-  [Línea 7:4]   Error semántico: variable 'x' ya fue declarada en este ámbito.
-  [Línea 11:5]  Error semántico: no se puede asignar tipo 'int' a variable de tipo 'bool'.
-```
-
-El formato de cada error muestra en qué línea y columna ocurre el problema.
-
----
-
-### Por qué un error no genera errores "en cadena"
-
-Cuando una expresión ya produjo un error, el compilador no genera errores adicionales por esa misma causa. Internamente, la expresión queda marcada con el tipo especial `ERROR`.
-
-Ejemplo:
-```cpp
-string texto = "hola";
-int suma = texto + 5;       // Error: no se puede sumar string + int
-cout << suma + 1;           // suma está marcada como ERROR → no genera segundo error
-```
-
-Sin este mecanismo, el compilador generaría un error para cada uso de `suma`, llenando la pantalla de mensajes confusos. Con él, se reporta solo el error original.
-
----
-
-## 7. Ejemplos de programas
-
-### Programa correcto (`ejemplo_semantico.txt`)
-
-```cpp
-int    entero  = 42;
-float  decimal = 3.14;
-bool   activo  = true;
-string nombre  = "Ana";
-
-// int → float está permitido (ampliación numérica)
-float f = 10;
-
-// Operaciones aritméticas
-int suma      = entero + 5;
-double mezcla = entero + 3.14;   // int + double = double
-
-// El if necesita una condición bool: entero > 10 produce bool
-if (entero > 10) {
-    cout << entero;
-}
-
-// Operadores lógicos: && necesita dos bool
-bool rango = entero > 0 && entero < 100;
-
-// Variable local: 'local' solo existe dentro del if
-if (entero > 0) {
-    int local = entero * 2;
-    cout << local;
-}
-
-// While con condición booleana
-int contador = 0;
-while (contador < 10) {
-    contador = contador + 1;
-}
-
-// Función: parámetros, cuerpo con return compatible
-int sumar(int a, int b) {
-    int c = a + b;
-    return c;
-}
-
-// Función void: puede hacer return; sin valor
-void imprimir(string msg) {
-    cout << msg;
-    return;
+while (x < 100) {
+    x = x + 1;
 }
 ```
 
-### Programa con errores (`ejemplo_semantico_error.txt`)
+---
 
-Ejecutá con `java -jar target/demo-1.0-jar-with-dependencies.jar ejemplo_semantico_error.txt` y vas a ver los 14 errores acumulados.
+## 3. Explicación de las reglas de la gramática
+
+El archivo `MiLenguaje.g4` contiene dos tipos de reglas:
+
+- **Reglas del parser** (en minúscula): definen la estructura
+- **Reglas del lexer** (en MAYÚSCULA): definen los tokens
+
+### 3.1 Regla `programa`
+
+```antlr4
+programa : sentencia* EOF ;
+```
+
+Un programa es **cero o más sentencias** seguidas del fin del archivo.  
+El `*` significa "cero o más veces" (como las expresiones regulares).
+
+### 3.2 Regla `sentencia`
+
+```antlr4
+sentencia
+    : declaracion
+    | asignacion
+    | sentenciaCout
+    | sentenciaIf
+    | sentenciaWhile
+    | bloque
+    ;
+```
+
+El `|` significa **alternativa** (OR). Una sentencia puede ser cualquiera de esos tipos.  
+ANTLR prueba cada alternativa en orden hasta encontrar una que coincida.
+
+### 3.3 Regla `declaracion`
+
+```antlr4
+declaracion : tipo ID (IGUAL expresion)? PYC ;
+```
+
+- `tipo` → palabra clave de tipo (`int`, `float`, etc.)
+- `ID` → nombre de la variable
+- `(IGUAL expresion)?` → valor inicial **opcional** (el `?` significa 0 o 1 vez)
+- `PYC` → punto y coma obligatorio
+
+Ejemplos válidos:
+```cpp
+int x;          // sin valor inicial
+int x = 5;      // con valor inicial
+float pi = 3.14;
+```
+
+### 3.4 Regla `expresion` y precedencia de operadores
+
+```antlr4
+expresion
+    : expresion OR expresion            // Nivel 6: menor precedencia
+    | expresion AND expresion           // Nivel 5
+    | expresion (EQL | DISTINTO) expresion   // Nivel 4
+    | expresion (MAYOR | MENOR | ...) expresion  // Nivel 3
+    | expresion (SUM | RES) expresion   // Nivel 2
+    | expresion (MUL | DIV | MOD) expresion  // Nivel 1
+    | NOT expresion                     // Unarios
+    | RES expresion
+    | PA expresion PC                   // Paréntesis
+    | INTEGER                           // Literales
+    | ID                                // Variables
+    ;
+```
+
+**La precedencia en ANTLR4 se define por el ORDEN:**  
+Las alternativas más arriba tienen **menor precedencia** (se evalúan al final).  
+Las más abajo tienen **mayor precedencia** (se evalúan primero).
+
+Esto asegura que `2 + 3 * 4` se parsee como `2 + (3 * 4) = 14` y no como `(2 + 3) * 4 = 20`.
 
 ---
 
-## 8. Construcciones del lenguaje
+## 4. Cómo funciona
 
-### Qué acepta el compilador
-
-| Construcción | Ejemplo |
-|---|---|
-| Declaración de variable | `int x = 10;` |
-| Declaración sin valor | `int x;` |
-| Asignación | `x = x + 1;` |
-| Salida por pantalla | `cout << x;` |
-| Condicional | `if (x > 0) { ... } else { ... }` |
-| Bucle | `while (x < 100) { ... }` |
-| Función | `int sumar(int a, int b) { return a + b; }` |
-| Retorno | `return expr;` o `return;` (para void) |
-
-### Tipos de datos
-
-| Tipo | Qué guarda | Ejemplo de declaración |
-|---|---|---|
-| `int` | Número entero | `int edad = 25;` |
-| `float` | Número decimal | `float precio = 9.99;` |
-| `double` | Decimal de alta precisión | `double pi = 3.14159265;` |
-| `char` | Un solo carácter | `char letra = 'A';` |
-| `string` | Texto | `string nombre = "Juan";` |
-| `bool` | Verdadero o falso | `bool activo = true;` |
-| `void` | Sin valor de retorno | Solo para funciones |
-
-### Precedencia de operadores
-
-Los operadores se evalúan en este orden (de menor a mayor prioridad):
+### El flujo de análisis
 
 ```
-||          → se evalúa último
-&&
-== !=
-< > <= >=
-+ -
-* / %
-! -(unario) → se evalúa primero
+Texto fuente
+     |
+     v
++---------+       tokens        +---------+      árbol de parseo
+|  LEXER  | ------------------> | PARSER  | -------------------->
++---------+                     +---------+           |
+     |                               |                v
+     | MiLenguajeLexer.java          | MiLenguajeParser.java
+     | (generado por ANTLR4)         | (generado por ANTLR4)     TreeViewer (GUI)
 ```
 
-Esto significa que `2 + 3 * 4` es `14` (no `20`), porque `*` tiene mayor prioridad que `+`.
-Y que `a || b && c` es `a || (b && c)` (no `(a || b) && c`).
+### El Lexer
 
-### Errores sintácticos comunes
+El **Lexer** (analizador léxico) lee el texto carácter por carácter y lo convierte en **tokens**.
+
+```
+"int x = 5 + 3 ;"
+  ---  -   -  -  -  -   -
+  INT  ID  =  5  +  3   ;
+
+ -> [INT] [ID:"x"] [IGUAL] [INTEGER:"5"] [SUM] [INTEGER:"3"] [PYC]
+```
+
+**Reglas del lexer en ANTLR4:**
+- Si dos reglas pueden coincidir, gana la que coincide con el texto **más largo**
+- Si coinciden con el mismo largo, gana la que aparece **primero** en el archivo
+- Por eso las palabras clave (`int`, `while`) van ANTES que `ID` en la gramática
+
+### El Parser
+
+El **Parser** (analizador sintáctico) toma la secuencia de tokens y verifica que forman una estructura válida según la gramática.
+
+Si la estructura es válida, construye un **Árbol de Parseo** (Parse Tree).
+
+### El Árbol de Parseo
+
+El árbol tiene:
+- **Nodos internos**: reglas del parser (como `programa`, `sentencia`, `expresion`)
+- **Hojas**: tokens del lexer (como `INT`, `ID`, `INTEGER`, `PYC`)
+
+El árbol se visualiza automáticamente en la **ventana gráfica** al ejecutar el compilador.
+
+---
+
+## 5. El patrón Visitor
+
+ANTLR4 genera una interfaz `MiLenguajeVisitor<T>` con un método por cada regla.  
+Extendemos `MiLenguajeBaseVisitor<T>` y sobreescribimos los métodos que nos interesan.
+
+```java
+public class MiVisitor extends MiLenguajeBaseVisitor<String> {
+
+    @Override
+    public String visitDeclaracion(MiLenguajeParser.DeclaracionContext ctx) {
+        // ctx da acceso a todos los hijos del nodo
+        String tipo  = ctx.tipo().getText();    // "int"
+        String nombre = ctx.ID().getText();      // "x"
+        // ...
+        return visitChildren(ctx);
+    }
+}
+```
+
+El Visitor se usa para:
+- **Imprimir** el árbol (como hace `ImprimirVisitor.java`)
+- **Construir** un AST (Árbol Sintáctico Abstracto)
+- **Analizar** tipos y ámbitos (análisis semántico)
+- **Generar** código intermedio o final
+
+---
+
+## 6. Visualizador gráfico (TreeViewer)
+
+El programa usa `org.antlr.v4.gui.TreeViewer` de ANTLR4 para mostrar el árbol en una ventana Swing.
+
+
+El `TreeViewer` necesita:
+- La lista de nombres de reglas del parser (para mostrar etiquetas como `declaracion`, `exprAditiva`)
+- El árbol de parseo devuelto por `parser.programa()`
+
+
+---
+
+## 7. Ejemplos prácticos
+
+### Programa válido
 
 ```cpp
-int x = 10        // Falta el ';' al final
-if (x > 0 {       // Falta el ')' antes de '{'
-int z = x + ;     // La expresión queda incompleta
-entero a = 5;     // 'entero' no es un tipo válido
+int x = 10;
+int y = 20;
+x = x + y;
+
+if (x > 10) {
+    cout << x;
+} else {
+    cout << y;
+}
+
+while (x < 100) {
+    x = x + 1;
+}
+```
+
+### Programas inválidos y sus errores
+
+```cpp
+// Error 1: falta el ';'
+int x = 10      // <- ERROR: missing ';' at 'int'
+int y = 20;
+```
+
+```cpp
+// Error 2: paréntesis sin cerrar en if
+if (x > 0 {     // <- ERROR: missing ')' at '{'
+    cout << x;
+}
+```
+
+```cpp
+// Error 3: expresión incompleta
+int z = x + ;   // <- ERROR: mismatched input ';'
+```
+
+```cpp
+// Error 4: tipo desconocido
+entero a = 5;   // <- ERROR: mismatched input 'entero'
 ```
 
 ---
 
-## 9. Cómo funciona el Visitor
+## 8. Qué queda por implementar
 
-El analizador semántico usa el **patrón Visitor**: un objeto que recorre el árbol de parseo nodo por nodo y hace algo en cada uno.
+### Sintaxis adicional
+- [ ] Sentencia `for` `while` `etc`  
+- [ ] Declaración y llamada de funciones
+- [ ] Arrays y acceso por índice (`arr[i]`)
+- [ ] Operador ternario (`x > 0 ? x : -x`)
 
-Funciona así: ANTLR4 construye el árbol del programa. El `SemanticAnalyzer` lo recorre, y por cada tipo de nodo llama al método correspondiente.
-
-```
-Árbol de parseo:
-    declaracion
-    ├── tipo: "int"
-    ├── ID:   "x"
-    └── expresion: 5 + 3
-          ├── expresion: 5   (tipo: int)
-          └── expresion: 3   (tipo: int)
-
-SemanticAnalyzer recorre el árbol:
-    visitDeclaracion()
-        → visita la expresion → devuelve "int"
-        → verifica: ¿"int" es compatible con "int"? → SI
-        → agrega x a la tabla de símbolos
-```
-
-Convención del proyecto:
-- Los métodos que visitan **sentencias** (`visitDeclaracion`, `visitSentenciaIf`, etc.) devuelven `null` — las sentencias no tienen tipo.
-- Los métodos que visitan **expresiones** (`visitExprAditiva`, `visitExprIdentificador`, etc.) devuelven el tipo resultante como `String` — por ejemplo `"int"`, `"bool"`, `"double"`.
 
 ---
 
-## 10. Posibles mejoras
+## 9. Ejercicios propuestos
 
-Estas funcionalidades no están implementadas y pueden ser un ejercicio de extensión:
+### Nivel 1 — Familiarización
 
-**Sintaxis nueva**
-- Sentencia `for`: `for (int i = 0; i < 10; i = i + 1) { ... }`
-- Llamada a funciones: `int r = sumar(3, 4);`
-- Arrays: `int arr[5];` y acceso `arr[i]`
-- Operador ternario: `int max = a > b ? a : b;`
+1. Ejecutá el compilador con `ejemplo.txt` y observá la consola y la ventana gráfica.
+2. Introducí errores en `ejemplo.txt` (quitá un `;`, un `)`, una `}`) y observá los mensajes.
+3. Agregá una variable `string saludo = "Hola mundo";` y verificá que compila.
 
-**Semántica más avanzada**
-- Detectar código inalcanzable después de un `return`
-- Constantes que no pueden reasignarse: `const int MAX = 100;`
-- Verificar que toda rama de una función con tipo de retorno efectivamente retorne un valor
+### Nivel 2 — Modificar la gramática
 
-**Generación de código**
-- Traducir el árbol a instrucciones de tres direcciones: `t1 = a + b`
-- Generar bytecode para una máquina virtual simple
+4. **Agregá el tipo `long`** como tipo de dato válido (solo en `MiLenguaje.g4`).
+5. **Agregá `cout <<` con múltiples valores** separados por `<<`:  
+   `cout << x << y << z;`  
+   Pista: modificá la regla `sentenciaCout`.
+6. **Agregá el operador `+=`**:  
+   `x += 5;` equivale a `x = x + 5;`
 
----
+### Nivel 3 — Extender el lenguaje
 
-## Referencia rápida
+7. **Agregá la sentencia `for`:**
+   ```cpp
+   for (int i = 0; i < 10; i = i + 1) {
+       cout << i;
+   }
+   ```
 
-| Construcción | Sintaxis |
-|---|---|
-| Declaración | `tipo ID = expr;` o `tipo ID;` |
-| Asignación | `ID = expr;` |
-| Salida | `cout << expr;` |
-| If | `if (expr_bool) { ... }` |
-| If-Else | `if (expr_bool) { ... } else { ... }` |
-| While | `while (expr_bool) { ... }` |
-| Función | `tipo ID(tipo ID, ...) { ... }` |
-| Return | `return expr;` / `return;` |
-| Tipos | `int float double char string bool void` |
-| Literales | `42` `3.14` `'A'` `"hola"` `true` `false` |
-| Aritmética | `+ - * / %` |
-| Comparación | `== != > < >= <=` |
-| Lógicos | `&& \|\| !` |
+8. **Agregá funciones sin parámetros:**
+   ```cpp
+   void saludar() {
+       cout << "Hola";
+   }
+   ```
+
+
+## 10. Preguntas de comprensión
+
+1. ¿Cuál es la diferencia entre un **token** y una **regla de parser**?
+2. ¿Por qué las palabras clave (`int`, `while`) deben estar ANTES que `ID` en el lexer?
+3. ¿Cómo determina ANTLR4 la **precedencia de operadores** en la regla `expresion`?
+4. ¿Qué haría el compilador con `int x = "hola";`? ¿Lo detectaría en esta fase?
