@@ -1,7 +1,7 @@
 # Compilador Educativo — Mini Lenguaje C++
 
 Proyecto de Técnicas de Compilación.  
-Implementa tres fases de un compilador: **análisis léxico**, **análisis sintáctico** y **análisis semántico**.
+Implementa cuatro fases de un compilador: **análisis léxico**, **análisis sintáctico**, **análisis semántico** y **generación de código intermedio**.
 
 ---
 
@@ -14,6 +14,8 @@ demo/
 ├── src/main/java/com/compilador/
 │   ├── App.java                          <- punto de entrada
 │   ├── ImprimirVisitor.java              <- visitor del árbol sintáctico
+│   ├── CodigoVisitor.java                <- visitor para cod. intermedio (el arquitecto)
+│   ├── GeneradorCodigo.java              <- manejo de cod. de 3 direcciones (el constructor)
 │   └── AnalisisSemantico/
 │       ├── Simbolo.java                  <- entrada de la tabla de símbolos
 │       ├── TablaSimbolos.java            <- tabla de símbolos con impresión
@@ -92,6 +94,16 @@ sumar           int        funcion         11         4          global         
 a               int        parametro       11         14         sumar
 numeros         int        variable        22         8          main            [arr:3] [private]
 ```
+
+### Fase 4 — Generación de Código Intermedio
+
+Traduce el código validado a un **código de tres direcciones**, empleando variables temporales (`t1`, `t2`, etc.) y etiquetas (`L1`, `L2`, etc.) para los saltos, facilitando el análisis y la optimización. 
+
+Se implementa mediante una separación de responsabilidades:
+- **`CodigoVisitor` (El Arquitecto):** Recorre el AST decidiendo *qué* operaciones ejecutar y *cuándo*. Controla la lógica central, incluyendo manejo de operadores y advertencias como división por cero.
+- **`GeneradorCodigo` (El Constructor):** Responsable de la mecánica de generación; se encarga de crear variables temporales únicas, emitir las instrucciones y almacenar todo el resultado.
+
+Al concluir exitosamente, el código intermedio se guarda en un archivo que adopta el nombre del original más el sufijo `_codigo_intermedio.txt`.
 
 ---
 
