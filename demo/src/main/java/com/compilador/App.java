@@ -183,6 +183,22 @@ public class App {
                 for (String error : semantico.getErrores()) {
                     System.out.println("  " + error);
                 }
+            } else {
+                System.out.println("\n  ✅ Análisis semántico completado sin errores.");
+                
+                System.out.println("\n=== 5. GENERACIÓN DE CÓDIGO INTERMEDIO ===");
+                System.out.println("   🎯 Iniciando recorrido del AST con CodigoVisitor...");
+                System.out.println("   📝 Código de tres direcciones generado:\n");
+                
+                GeneradorCodigo gen = new GeneradorCodigo();
+                CodigoVisitor visitor = new CodigoVisitor(gen);
+                visitor.visit(arbolParseo);
+                
+                gen.imprimir();
+                
+                String outputFile = args[0].replace(".txt", "").replace(".cpp", "") + "_codigo_intermedio.txt";
+                gen.guardar(outputFile);
+                System.out.println("\n✅ Código intermedio guardado en: " + outputFile);
             }
 
             System.out.println("\n" + "=".repeat(65));
