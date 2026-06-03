@@ -179,11 +179,30 @@ public class App {
             semantico.getTabla().imprimir();
 
             if (semantico.hayErrores()) {
-                System.out.println("\n  ❌ ERRORES SEMÁNTICOS:");
+                System.out.println("\n❌ ERRORES SEMÁNTICOS:");
                 for (String error : semantico.getErrores()) {
-                    System.out.println("  " + error);
+                    System.out.println("   ❌ Error: " + error);
                 }
-            } else {
+            }
+
+            if (semantico.hayAdvertencias()) {
+                System.out.println("\n⚠️ WARNINGS SEMÁNTICOS:");
+                for (String adv : semantico.getAdvertencias()) {
+                    System.out.println("   ⚠️ " + adv);
+                }
+                System.out.println("   ⚠️ El código tiene warnings, pero se puede continuar.");
+            }
+
+            if (semantico.hayErrores()) {
+                System.out.println("\n❌ Compilación detenida debido a errores semánticos.");
+                return;
+            }
+
+            if (!semantico.hayErrores() && !semantico.hayAdvertencias()) {
+                System.out.println("\n  ✅ Análisis semántico completado sin errores.");
+            }
+
+            {
                 System.out.println("\n  ✅ Análisis semántico completado sin errores.");
                 
                 System.out.println("\n=== 5. GENERACIÓN DE CÓDIGO INTERMEDIO ===");
