@@ -40,11 +40,13 @@ programa
 // Una sentencia puede ser cualquiera de estos tipos.
 // ANTLR probará cada alternativa en orden hasta encontrar una que encaje.
 sentencia
-    : declaracion        // int x = 5;
+    : declaracionFuncion // int sumar(int a, int b) { ... }
+    | declaracion        // int x = 5;
     | asignacion         // x = x + 1;
     | sentenciaCout      // cout << x;
     | sentenciaIf        // if (x > 0) { ... }
     | sentenciaWhile     // while (x < 10) { ... }
+    | sentenciaReturn    // return x;
     | bloque             // { ... }
     ;
 
@@ -55,7 +57,24 @@ sentencia
 //   int x = 5;       <- con valor inicial
 //   float pi = 3.14;
 declaracion
-    : tipo ID (IGUAL expresion)? PYC
+    : tipo ID (IGUAL expresion)? PYC    # declVariable
+    | tipo ID CA expresion CC PYC       # declArreglo
+    ;
+
+declaracionFuncion
+    : tipo ID PA listaParametros? PC bloque
+    ;
+
+listaParametros
+    : parametro (COMA parametro)*
+    ;
+
+parametro
+    : tipo ID
+    ;
+
+sentenciaReturn
+    : RETURN expresion? PYC
     ;
 
 // TIPOS DE DATOS disponibles en el mini lenguaje
@@ -73,7 +92,8 @@ tipo
 // ATENCIÓN: el parser distingue declaración de asignación
 // porque la declaración empieza con un TIPO y esta con un ID.
 asignacion
-    : ID IGUAL expresion PYC
+    : ID IGUAL expresion PYC                          # asigVariable
+    | ID CA expresion CC IGUAL expresion PYC          # asigArreglo
     ;
 
 // COUT: salida por pantalla
@@ -183,6 +203,12 @@ expresion
     // Literales booleanos
     | VERDADERO                                                           # exprVerdadero
     | FALSO                                                               # exprFalso
+
+    // Llamada a función: sumar(a, b)
+    | ID PA (expresion (COMA expresion)*)? PC                             # exprLlamada
+
+    // Acceso a array: numeros[i]
+    | ID CA expresion CC                                                  # exprAccesoArray
 
     // Variable: referencia a un identificador declarado
     | ID                                                                  # exprIdentificador
