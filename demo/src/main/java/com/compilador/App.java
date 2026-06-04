@@ -3,6 +3,7 @@ package com.compilador;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import org.antlr.v4.gui.TreeViewer;
+import com.compilador.AnalisisSemantico.AnalizadorSemantico;
 import javax.swing.*;
 import java.util.Arrays;
 import java.io.IOException;
@@ -169,6 +170,20 @@ public class App {
             }
 
             System.out.println("  ✅ Análisis sintáctico completado sin errores.");
+
+            System.out.println("\n=== ANÁLISIS SEMÁNTICO ===\n");
+            System.out.println("   📋 Tabla de símbolos construida:");
+
+            AnalizadorSemantico semantico = new AnalizadorSemantico();
+            semantico.visit(arbolParseo);
+            semantico.getTabla().imprimir();
+
+            if (semantico.hayErrores()) {
+                System.out.println("\n  ❌ ERRORES SEMÁNTICOS:");
+                for (String error : semantico.getErrores()) {
+                    System.out.println("  " + error);
+                }
+            }
 
             System.out.println("\n" + "=".repeat(65));
             System.out.println("  Compilacion exitosa.");
