@@ -212,12 +212,35 @@ public class App {
                 GeneradorCodigo gen = new GeneradorCodigo();
                 CodigoVisitor visitor = new CodigoVisitor(gen);
                 visitor.visit(arbolParseo);
-                
+
                 gen.imprimir();
-                
+
                 String outputFile = args[0].replace(".txt", "").replace(".cpp", "") + "_codigo_intermedio.txt";
                 gen.guardar(outputFile);
                 System.out.println("\n✅ Código intermedio guardado en: " + outputFile);
+
+                List<String> folds = visitor.getFoldLog();
+                int total = gen.cantidadInstrucciones();
+                int eliminadas = folds.size();
+                int original = total + eliminadas;
+                double reduccion = original > 0 ? (eliminadas * 100.0 / original) : 0;
+
+                System.out.println("\n=== 6. OPTIMIZACIÓN DE CÓDIGO ===");
+                System.out.println("   🔧 Aplicando optimizaciones al código intermedio...");
+                System.out.println("✅ Optimización completada:");
+                System.out.printf("   📊 Instrucciones originales: %d%n", original);
+                System.out.printf("   📊 Instrucciones optimizadas: %d%n", total);
+                System.out.printf("   📊 Instrucciones eliminadas: %d%n", eliminadas);
+                System.out.printf("   📊 Reducción de código: %.2f%%%n", reduccion);
+
+                if (!folds.isEmpty()) {
+                    System.out.println("\n   📝 Expresiones simplificadas (constant folding):");
+                    for (String fold : folds) {
+                        System.out.println("      🔁 " + fold);
+                    }
+                } else {
+                    System.out.println("\n   ℹ️  No se encontraron expresiones con literales para simplificar.");
+                }
             }
 
             System.out.println("\n" + "=".repeat(65));

@@ -31,6 +31,10 @@ public class GeneradorCodigo {
         instrucciones.add(etiqueta + ":");
     }
 
+    public int cantidadInstrucciones() {
+        return instrucciones.size();
+    }
+
     public void imprimir() {
         for (int i = 0; i < instrucciones.size(); i++) {
             System.out.printf("%3d: %s%n", i, instrucciones.get(i));

@@ -6,6 +6,7 @@ int contadorGlobal;
 double valorPi;
 char inicial;
 bool activo;
+int suma = 3 + 2;
 
 // Función simple que retorna valor
 int sumar(int a, int b) {
