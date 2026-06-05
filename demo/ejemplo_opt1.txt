@@ -1,0 +1,63 @@
+  0: // Código de tres direcciones generado
+  1: PROGRAMA_INICIO:
+  2: // Declaración de variables globales
+  3: DECLARE contadorGlobal int
+  4: DECLARE valorPi double
+  5: DECLARE inicial char
+  6: DECLARE activo bool
+  7: DECLARE suma int
+  8: suma = 5
+  9: func_sumar:
+ 10: PARAM a int
+ 11: PARAM b int
+ 12: DECLARE resultado int
+ 13: t1 = a + b
+ 14: resultado = t1
+ 15: t2 = contadorGlobal + 1
+ 16: contadorGlobal = t2
+ 17: return resultado
+ 18: func_main:
+ 19: DECLARE estado int
+ 20: DECLARE temp int
+ 21: DECLARE numeros[3] int
+ 22: contadorGlobal = 0
+ 23: valorPi = 3.14
+ 24: inicial = 'M'
+ 25: numeros[0] = 10
+ 26: numeros[1] = 20
+ 27: numeros[2] = 30
+ 28: t3 = numeros[0]
+ 29: t4 = numeros[1]
+ 30: t5 = t3 + t4
+ 31: temp = t5
+ 32: t6 = temp * 2
+ 33: temp = t6
+ 34: t7 = temp / 3
+ 35: temp = t7
+ 36: t8 = temp % 5
+ 37: temp = t8
+ 38: CALL func_sumar, temp, 5
+ 39: estado = RETURN_VALUE
+ 40: contadorGlobal = estado
+ 41: valorPi = temp
+ 42: inicial = 'X'
+ 43: t9 = estado > 0
+ 44: if t9 goto THEN_1
+ 45: goto END_IF_2
+ 46: THEN_1:
+ 47: DECLARE auxiliar int
+ 48: t10 = estado + 10
+ 49: auxiliar = t10
+ 50: estado = auxiliar
+ 51: END_IF_2:
+ 52: DECLARE velocidad int
+ 53: velocidad = 60
+ 54: DECLARE limite int
+ 55: limite = velocidad
+ 56: DECLARE base int
+ 57: base = 10
+ 58: DECLARE negado int
+ 59: t11 = -base
+ 60: negado = t11
+ 61: return estado
+ 62: PROGRAMA_FIN:

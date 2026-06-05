@@ -52,6 +52,14 @@ int main() {
         auxiliar = estado + 10;
         estado = auxiliar;
     }
-    
+
+    int velocidad = 60;
+    int limite;
+    limite = velocidad;
+
+    int base = 10;
+    int negado;
+    negado = -base;
+
     return estado;
 }

@@ -200,47 +200,74 @@ public class App {
 
             if (!semantico.hayErrores() && !semantico.hayAdvertencias()) {
                 System.out.println("\n  ✅ Análisis semántico completado sin errores.");
-            }
 
-            {
-                System.out.println("\n  ✅ Análisis semántico completado sin errores.");
-                
                 System.out.println("\n=== 5. GENERACIÓN DE CÓDIGO INTERMEDIO ===");
                 System.out.println("   🎯 Iniciando recorrido del AST con CodigoVisitor...");
                 System.out.println("   📝 Código de tres direcciones generado:\n");
-                
+
                 GeneradorCodigo gen = new GeneradorCodigo();
                 CodigoVisitor visitor = new CodigoVisitor(gen);
                 visitor.visit(arbolParseo);
 
                 gen.imprimir();
 
-                String outputFile = args[0].replace(".txt", "").replace(".cpp", "") + "_codigo_intermedio.txt";
-                gen.guardar(outputFile);
-                System.out.println("\n✅ Código intermedio guardado en: " + outputFile);
+                String base = args[0].replace(".txt", "").replace(".cpp", "");
 
                 List<String> folds = visitor.getFoldLog();
-                int total = gen.cantidadInstrucciones();
-                int eliminadas = folds.size();
-                int original = total + eliminadas;
-                double reduccion = original > 0 ? (eliminadas * 100.0 / original) : 0;
+                gen.guardar(base + "_opt1.txt");
+                System.out.println("\n✅ OPT-1 guardado en: " + base + "_opt1.txt");
+
+                List<String> propag = gen.optimizarPropagacionConstantes();
+                gen.guardar(base + "_opt2.txt");
+                System.out.println("✅ OPT-2 guardado en: " + base + "_opt2.txt");
+
+                List<String> muertas = gen.optimizarEliminacionMuerto();
+                gen.guardar(base + "_opt3.txt");
+                System.out.println("✅ OPT-3 guardado en: " + base + "_opt3.txt");
 
                 System.out.println("\n=== 6. OPTIMIZACIÓN DE CÓDIGO ===");
-                System.out.println("   🔧 Aplicando optimizaciones al código intermedio...");
-                System.out.println("✅ Optimización completada:");
-                System.out.printf("   📊 Instrucciones originales: %d%n", original);
-                System.out.printf("   📊 Instrucciones optimizadas: %d%n", total);
-                System.out.printf("   📊 Instrucciones eliminadas: %d%n", eliminadas);
-                System.out.printf("   📊 Reducción de código: %.2f%%%n", reduccion);
 
+                System.out.println("\n   OPT-1: Constant Folding");
                 if (!folds.isEmpty()) {
-                    System.out.println("\n   📝 Expresiones simplificadas (constant folding):");
+                    System.out.printf("   📊 Expresiones simplificadas: %d%n", folds.size());
                     for (String fold : folds) {
                         System.out.println("      🔁 " + fold);
                     }
                 } else {
-                    System.out.println("\n   ℹ️  No se encontraron expresiones con literales para simplificar.");
+                    System.out.println("   ℹ️  No se encontraron expresiones literales para simplificar.");
                 }
+
+                System.out.println("\n   OPT-2: Propagación de constantes");
+                if (!propag.isEmpty()) {
+                    System.out.printf("   📊 Sustituciones realizadas: %d%n", propag.size());
+                    for (String p : propag) {
+                        System.out.println("      🔀 " + p);
+                    }
+                } else {
+                    System.out.println("   ℹ️  No se encontraron variables constantes para propagar.");
+                }
+
+                System.out.println("\n   OPT-3: Eliminación de código muerto");
+                if (!muertas.isEmpty()) {
+                    System.out.printf("   📊 Temporarias eliminadas: %d%n", muertas.size());
+                    for (String m : muertas) {
+                        System.out.println("      ❌ " + m);
+                    }
+                } else {
+                    System.out.println("   ℹ️  No se encontraron temporarias muertas para eliminar.");
+                }
+
+                int instrFinal    = gen.cantidadInstrucciones();
+                int elimFolding   = folds.size();
+                int elimMuertas   = muertas.size();
+                int instrOriginal = instrFinal + elimFolding + elimMuertas;
+                double reduccion  = instrOriginal > 0 ? (100.0 - (instrFinal * 100.0 / instrOriginal)) : 0;
+
+                System.out.println("\n   📊 Resumen:");
+                System.out.printf("      Sin optimizar: %d instrucciones%n", instrOriginal);
+                System.out.printf("      Tras OPT-1:    %d  (-%d)%n", instrOriginal - elimFolding, elimFolding);
+                System.out.printf("      Tras OPT-3:    %d  (-%d)%n", instrFinal, elimMuertas);
+                System.out.printf("      Reducción:     %.2f%%%n", reduccion);
             }
 
             System.out.println("\n" + "=".repeat(65));
