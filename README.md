@@ -105,6 +105,16 @@ Se implementa mediante una separación de responsabilidades:
 
 Al concluir exitosamente, el código intermedio se guarda en un archivo que adopta el nombre del original más el sufijo `_codigo_intermedio.txt`.
 
+### Fase 5 — Optimización de Código
+
+El compilador incluye un pipeline de 3 optimizaciones que se aplican en cadena sobre el código intermedio:
+
+1. **Simplificación de expresiones (Constant Folding):** Se aplica *inline* durante la generación del código intermedio. Evalúa operaciones aritméticas en tiempo de compilación cuando todos los operandos son literales (ej. `3 + 2` se emite directamente como `5`). El resultado se guarda en `<archivo>_opt1.txt`.
+2. **Propagación de constantes:** Se aplica como post-proceso sobre la lista de instrucciones generada. Busca asignaciones de literales a variables y reemplaza las apariciones futuras de esa variable por su valor constante correspondiente. El resultado se guarda en `<archivo>_opt2.txt`.
+3. **Eliminación de código muerto:** Se aplica como post-proceso sobre el resultado de la propagación. Identifica variables temporales (`t1`, `t2`, etc.) que son asignadas pero nunca se usan como operandos en ninguna instrucción posterior, y elimina esas instrucciones de asignación. El resultado se guarda en `<archivo>_opt3.txt`.
+
+Al finalizar, se imprime un resumen global indicando la cantidad de instrucciones originales, cuántas fueron eliminadas por cada optimización y el porcentaje de reducción total.
+
 ---
 
 ## Visualizador gráfico
