@@ -5,15 +5,12 @@ import java.util.List;
 
 public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
     private GeneradorCodigo gen;
+    private OptSimplificacionExpresiones opt1;
     private boolean enGlobal = true;
-    private List<String> foldLog = new ArrayList<>();
 
-    public CodigoVisitor(GeneradorCodigo gen) {
+    public CodigoVisitor(GeneradorCodigo gen, OptSimplificacionExpresiones opt1) {
         this.gen = gen;
-    }
-
-    public List<String> getFoldLog() {
-        return foldLog;
+        this.opt1 = opt1;
     }
 
     @Override
@@ -266,36 +263,8 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
         return temp;
     }
 
-    private boolean esNumerico(String s) {
-        try { Double.parseDouble(s); return true; } catch (NumberFormatException e) { return false; }
-    }
-
-    private String foldBinaryOp(String left, String right, String op) {
-        if (esNumerico(left) && esNumerico(right)) {
-            double l = Double.parseDouble(left);
-            double r = Double.parseDouble(right);
-            double result;
-            switch (op) {
-                case "+": result = l + r; break;
-                case "-": result = l - r; break;
-                case "*": result = l * r; break;
-                case "/": result = l / r; break;
-                case "%": result = l % r; break;
-                default: return null;
-            }
-            String folded;
-            if (result == Math.floor(result) && !Double.isInfinite(result))
-                folded = String.valueOf((long) result);
-            else
-                folded = String.valueOf(result);
-            foldLog.add(left + " " + op + " " + right + "  →  " + folded);
-            return folded;
-        }
-        return null;
-    }
-
     private String handleBinaryOp(String left, String right, String op) {
-        String folded = foldBinaryOp(left, right, op);
+        String folded = opt1.tryFold(left, right, op);
         if (folded != null) return folded;
         String temp = gen.nuevaTemp();
         gen.emitir(temp + " = " + left + " " + op + " " + right);

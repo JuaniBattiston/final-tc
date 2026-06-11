@@ -206,22 +206,25 @@ public class App {
                 System.out.println("   📝 Código de tres direcciones generado:\n");
 
                 GeneradorCodigo gen = new GeneradorCodigo();
-                CodigoVisitor visitor = new CodigoVisitor(gen);
+                OptSimplificacionExpresiones opt1 = new OptSimplificacionExpresiones();
+                CodigoVisitor visitor = new CodigoVisitor(gen, opt1);
                 visitor.visit(arbolParseo);
 
                 gen.imprimir();
 
                 String base = args[0].replace(".txt", "").replace(".cpp", "");
 
-                List<String> folds = visitor.getFoldLog();
+                List<String> folds = opt1.getFoldLog();
                 gen.guardar(base + "_opt1.txt");
                 System.out.println("\n✅ OPT-1 guardado en: " + base + "_opt1.txt");
 
-                List<String> propag = gen.optimizarPropagacionConstantes();
+                OptPropagacionConstantes opt2 = new OptPropagacionConstantes();
+                List<String> propag = opt2.optimizar(gen.getInstrucciones());
                 gen.guardar(base + "_opt2.txt");
                 System.out.println("✅ OPT-2 guardado en: " + base + "_opt2.txt");
 
-                List<String> muertas = gen.optimizarEliminacionMuerto();
+                OptEliminacionMuerto opt3 = new OptEliminacionMuerto();
+                List<String> muertas = opt3.optimizar(gen.getInstrucciones());
                 gen.guardar(base + "_opt3.txt");
                 System.out.println("✅ OPT-3 guardado en: " + base + "_opt3.txt");
 

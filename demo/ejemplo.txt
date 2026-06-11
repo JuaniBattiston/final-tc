@@ -1,5 +1,3 @@
-// Archivo de prueba SIN errores - SÚPER SIMPLE
-// Compatible con la gramática básica
 
 // Variables globales
 int contadorGlobal;

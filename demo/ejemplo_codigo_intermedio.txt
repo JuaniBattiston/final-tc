@@ -50,5 +50,14 @@
  49: auxiliar = t10
  50: estado = auxiliar
  51: END_IF_2:
- 52: return estado
- 53: PROGRAMA_FIN:
+ 52: DECLARE velocidad int
+ 53: velocidad = 60
+ 54: DECLARE limite int
+ 55: limite = velocidad
+ 56: DECLARE base int
+ 57: base = 10
+ 58: DECLARE negado int
+ 59: t11 = -base
+ 60: negado = t11
+ 61: return estado
+ 62: PROGRAMA_FIN:
