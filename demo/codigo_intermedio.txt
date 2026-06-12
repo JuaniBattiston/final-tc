@@ -2,10 +2,10 @@
   1: PROGRAMA_INICIO:
   2: // Declaración de variables globales
   3: DECLARE a int
-  4: t1 = 5
+  4: t1 = 2 + 3
   5: a = t1
   6: DECLARE b int
-  7: t2 = 20
+  7: t2 = 4 * 5
   8: b = t2
   9: DECLARE c int
  10: c = b

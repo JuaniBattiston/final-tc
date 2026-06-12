@@ -18,14 +18,13 @@ public class App {
             System.exit(1);
         }
 
-        try {            
+        try {
             CharStream input = CharStreams.fromFileName(args[0]);
             System.out.println("Analizando archivo: " + args[0]);
             System.out.println("=".repeat(65));
-                                                                                                                        
 
             MiLenguajeLexer lexer = new MiLenguajeLexer(input);
-                                    
+
             List<String> erroresLexicos = new ArrayList<>();
             lexer.removeErrorListeners();
             lexer.addErrorListener(new BaseErrorListener() {
@@ -35,23 +34,23 @@ public class App {
                                         int line, int charPositionInLine,
                                         String msg, RecognitionException e) {
                     erroresLexicos.add(
-                        "  [Línea " + line + ":" + charPositionInLine + "] " + msg
+                        "  [Linea " + line + ":" + charPositionInLine + "] " + msg
                     );
                 }
             });
-                        
+
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             tokens.fill();
-            
-            System.out.println("\n=== FASE 1: ANÁLISIS LÉXICO ===\n");
+
+            System.out.println("\n=== FASE 1: ANALISIS LEXICO ===\n");
             System.out.printf("  %-20s %-25s %-8s %-8s%n",
-                              "TIPO DE TOKEN", "LEXEMA", "LÍNEA", "COLUMNA");
+                              "TIPO DE TOKEN", "LEXEMA", "LINEA", "COLUMNA");
             System.out.println("  " + "-".repeat(63));
 
             for (Token token : tokens.getTokens()) {
                 if (token.getType() == Token.EOF) continue;
 
-                String tipo = MiLenguajeLexer.VOCABULARY.getSymbolicName(token.getType());                
+                String tipo = MiLenguajeLexer.VOCABULARY.getSymbolicName(token.getType());
                 if (tipo == null) tipo = "DESCONOCIDO";
 
                 System.out.printf("  %-20s %-25s %-8d %-8d%n",
@@ -60,25 +59,24 @@ public class App {
                                   token.getLine(),
                                   token.getCharPositionInLine());
             }
-            
+
             if (!erroresLexicos.isEmpty()) {
                 System.out.println("\n  ERRORES LEXICOS:");
                 for (String error : erroresLexicos) {
                     System.out.println(error);
                 }
-                System.out.println("\n  El análisis no puede continuar con errores léxicos.");
+                System.out.println("\n  El analisis no puede continuar con errores lexicos.");
                 return;
             }
 
-            System.out.println("\n  Análisis léxico completado sin errores.");
-                                                                                                                                                                                                                                                            
+            System.out.println("\n  Analisis lexico completado sin errores.");
 
-            System.out.println("\n=== FASE 2: ANÁLISIS SINTÁCTICO ===\n");
-                        
+            System.out.println("\n=== FASE 2: ANALISIS SINTACTICO ===\n");
+
             tokens.reset();
 
             MiLenguajeParser parser = new MiLenguajeParser(tokens);
-            
+
             List<String> erroresSintacticos = new ArrayList<>();
             parser.removeErrorListeners();
             parser.addErrorListener(new BaseErrorListener() {
@@ -91,89 +89,77 @@ public class App {
                                          ? "'" + offendingSymbol + "'"
                                          : "fin de archivo";
                     erroresSintacticos.add(
-                        "  [Línea " + line + ":" + charPositionInLine + "] "
-                        + "cerca de " + tokenErroneo + " → " + msg
+                        "  [Linea " + line + ":" + charPositionInLine + "] "
+                        + "cerca de " + tokenErroneo + " -> " + msg
                     );
                 }
             });
-                        
+
             MiLenguajeParser.ProgramaContext arbolParseo = parser.programa();
-            
+
             if (!erroresSintacticos.isEmpty()) {
-                System.out.println("  ERRORES SINTÁCTICOS:");
+                System.out.println("  ERRORES SINTACTICOS:");
                 for (String error : erroresSintacticos) {
                     System.out.println(error);
                 }
                 System.out.println();
                 System.out.println("  Pista: revisa que cada sentencia:");
                 System.out.println("    - Termine con punto y coma ';'");
-                System.out.println("    - Tenga paréntesis balanceados");
-                System.out.println("    - Use tipos válidos (int, float, string, bool, char, double)");
+                System.out.println("    - Tenga parentesis balanceados");
+                System.out.println("    - Use tipos validos (int, float, string, bool, char, double)");
                 return;
             }
 
-            System.out.println("  Análisis sintáctico completado sin errores.");
+            System.out.println("  Analisis sintactico completado sin errores.");
 
-            System.out.println("\n=== ANÁLISIS SEMÁNTICO ===\n");
-            System.out.println("   Tabla de símbolos construida:");
+            System.out.println("\n=== FASE 3: ANALISIS SEMANTICO ===\n");
+            System.out.println("   Tabla de simbolos:");
 
             AnalizadorSemantico semantico = new AnalizadorSemantico();
             semantico.visit(arbolParseo);
             semantico.getTabla().imprimir();
 
             if (semantico.hayErrores()) {
-                System.out.println("\nERRORES SEMÁNTICOS:");
+                System.out.println("\nERRORES SEMANTICOS:");
                 for (String error : semantico.getErrores()) {
                     System.out.println("   Error: " + error);
                 }
             }
 
             if (semantico.hayAdvertencias()) {
-                System.out.println("\nWARNINGS SEMÁNTICOS:");
+                System.out.println("\nWARNINGS SEMANTICOS:");
                 for (String adv : semantico.getAdvertencias()) {
                     System.out.println("   " + adv);
                 }
-                System.out.println("   El código tiene warnings, pero se puede continuar.");
+                System.out.println("   El codigo tiene warnings, pero se puede continuar.");
             }
 
             if (semantico.hayErrores()) {
-                System.out.println("\nCompilación detenida debido a errores semánticos.");
+                System.out.println("\nCompilacion detenida debido a errores semanticos.");
                 return;
             }
 
             if (!semantico.hayErrores() && !semantico.hayAdvertencias()) {
-                System.out.println("\n  Análisis semántico completado sin errores.");
+                System.out.println("\n  Analisis semantico completado sin errores.");
 
-                System.out.println("\n=== 5. GENERACIÓN DE CÓDIGO INTERMEDIO ===");
-                System.out.println("   Iniciando recorrido del AST con CodigoVisitor...");
-                System.out.println("   Código de tres direcciones generado:\n");
+                System.out.println("\n=== FASE 4: GENERACION DE CODIGO INTERMEDIO ===\n");
 
                 GeneradorCodigo gen = new GeneradorCodigo();
                 OptSimplificacionExpresiones opt1 = new OptSimplificacionExpresiones();
                 CodigoVisitor visitor = new CodigoVisitor(gen, opt1);
                 visitor.visit(arbolParseo);
 
+                System.out.println("   Codigo de tres direcciones (ANTES de optimizaciones):\n");
                 gen.imprimir();
+                gen.guardar("codigo_intermedio.txt");
 
                 String base = args[0].replace(".txt", "").replace(".cpp", "");
 
-                List<String> folds = opt1.getFoldLog();
-                gen.guardar(base + "_opt1.txt");
-                System.out.println("\nOPT-1 guardado en: " + base + "_opt1.txt");
-
-                OptPropagacionConstantes opt2 = new OptPropagacionConstantes();
-                List<String> propag = opt2.optimizar(gen.getInstrucciones());
-                gen.guardar(base + "_opt2.txt");
-                System.out.println("OPT-2 guardado en: " + base + "_opt2.txt");
-
-                OptEliminacionMuerto opt3 = new OptEliminacionMuerto();
-                List<String> muertas = opt3.optimizar(gen.getInstrucciones());
-                gen.guardar(base + "_opt3.txt");
-                System.out.println("OPT-3 guardado en: " + base + "_opt3.txt");
-
-                System.out.println("\n=== 6. OPTIMIZACIÓN DE CÓDIGO ===");
+                System.out.println("\n=== FASE 5: OPTIMIZACION DE CODIGO ===");
 
                 System.out.println("\n   OPT-1: Constant Folding");
+                List<String> folds = opt1.optimizar(gen.getInstrucciones());
+                gen.guardar(base + "_opt1.txt");
                 if (!folds.isEmpty()) {
                     System.out.printf("   Expresiones simplificadas: %d%n", folds.size());
                     for (String fold : folds) {
@@ -183,7 +169,10 @@ public class App {
                     System.out.println("   No se encontraron expresiones literales para simplificar.");
                 }
 
-                System.out.println("\n   OPT-2: Propagación de constantes");
+                System.out.println("\n   OPT-2: Propagacion de constantes");
+                OptPropagacionConstantes opt2 = new OptPropagacionConstantes();
+                List<String> propag = opt2.optimizar(gen.getInstrucciones());
+                gen.guardar(base + "_opt2.txt");
                 if (!propag.isEmpty()) {
                     System.out.printf("   Sustituciones realizadas: %d%n", propag.size());
                     for (String p : propag) {
@@ -193,7 +182,10 @@ public class App {
                     System.out.println("   No se encontraron variables constantes para propagar.");
                 }
 
-                System.out.println("\n   OPT-3: Eliminación de código muerto");
+                System.out.println("\n   OPT-3: Eliminacion de codigo muerto");
+                OptEliminacionMuerto opt3 = new OptEliminacionMuerto();
+                List<String> muertas = opt3.optimizar(gen.getInstrucciones());
+                gen.guardar(base + "_opt3.txt");
                 if (!muertas.isEmpty()) {
                     System.out.printf("   Temporarias eliminadas: %d%n", muertas.size());
                     for (String m : muertas) {
@@ -202,6 +194,9 @@ public class App {
                 } else {
                     System.out.println("   No se encontraron temporarias muertas para eliminar.");
                 }
+
+                System.out.println("\n   Codigo optimizado (DESPUES de las tres optimizaciones):\n");
+                gen.imprimir();
 
                 int instrFinal    = gen.cantidadInstrucciones();
                 int elimFolding   = folds.size();
@@ -212,13 +207,12 @@ public class App {
                 System.out.println("\n   Resumen:");
                 System.out.printf("      Sin optimizar: %d instrucciones%n", instrOriginal);
                 System.out.printf("      Tras OPT-1:    %d  (-%d)%n", instrOriginal - elimFolding, elimFolding);
-                System.out.printf("      Tras OPT-3:    %d  (-%d)%n", instrFinal, elimMuertas);
-                System.out.printf("      Reducción:     %.2f%%%n", reduccion);
+                System.out.printf("      Tras OPT-2+3:  %d  (-%d)%n", instrFinal, elimMuertas);
+                System.out.printf("      Reduccion:     %.2f%%%n", reduccion);
             }
 
             System.out.println("\n" + "=".repeat(65));
             System.out.println("  Compilacion exitosa.");
-                                                                                                                        
 
             System.out.println("\n  Abriendo visualizador grafico del arbol...");
             mostrarArbol(arbolParseo, parser);
@@ -230,9 +224,9 @@ public class App {
             e.printStackTrace();
         }
     }
-            
+
     private static void mostrarArbol(ParseTree tree, Parser parser) {
-        JFrame frame = new JFrame("Árbol Sintáctico");
+        JFrame frame = new JFrame("Arbol Sintactico");
         JPanel panel = new JPanel();
         TreeViewer viewer = new TreeViewer(Arrays.asList(parser.getRuleNames()), tree);
         viewer.setScale(1.5);

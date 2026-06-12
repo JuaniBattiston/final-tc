@@ -2,11 +2,30 @@ package com.compilador;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OptSimplificacionExpresiones {
     private List<String> foldLog = new ArrayList<>();
 
     public List<String> getFoldLog() {
+        return foldLog;
+    }
+
+    public List<String> optimizar(List<String> instrucciones) {
+        Pattern p = Pattern.compile("^(t\\d+)\\s*=\\s*(-?\\d+\\.?\\d*)\\s*([+\\-*/%])\\s*(-?\\d+\\.?\\d*)$");
+        List<String> resultado = new ArrayList<>(instrucciones);
+        for (int i = 0; i < resultado.size(); i++) {
+            Matcher m = p.matcher(resultado.get(i).trim());
+            if (m.matches()) {
+                String folded = tryFold(m.group(2), m.group(4), m.group(3));
+                if (folded != null) {
+                    resultado.set(i, m.group(1) + " = " + folded);
+                }
+            }
+        }
+        instrucciones.clear();
+        instrucciones.addAll(resultado);
         return foldLog;
     }
 

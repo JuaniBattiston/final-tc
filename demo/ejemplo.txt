@@ -1,63 +1,21 @@
+// OPT-1 (Constant Folding):
+//   t1 = 2 + 3  ->  t1 = 5
+//   t2 = 4 * 5  ->  t2 = 20
+//
+// OPT-2 (Propagacion de constantes):
+//   a = t1  ->  a = 5       (t1 es constante)
+//   b = t2  ->  b = 20      (t2 es constante)
+//   t3 = b + 1  ->  t3 = 20 + 1   (b es constante)
+//   cout << a   ->  cout << 5
+//   cout << b   ->  cout << 20
+//
+// OPT-3 (Eliminacion de codigo muerto):
+//   t1 = 5   eliminada  (t1 ya no es usada despues de OPT-2)
+//   t2 = 20  eliminada  (t2 ya no es usada despues de OPT-2)
 
-// Variables globales
-int contadorGlobal;
-double valorPi;
-char inicial;
-bool activo;
-int suma = 3 + 2;
-
-// Función simple que retorna valor
-int sumar(int a, int b) {
-    int resultado;
-    resultado = a + b;
-    contadorGlobal = contadorGlobal + 1;
-    return resultado;
-}
-
-// Función main
-int main() {
-    int estado;
-    int temp;
-    int numeros[3];
-    
-    // Inicializar variables globales
-    contadorGlobal = 0;
-    valorPi = 3.14;
-    inicial = 'M';
-    
-    // Usar arrays
-    numeros[0] = 10;
-    numeros[1] = 20;
-    numeros[2] = 30;
-    
-    // Operaciones básicas
-    temp = numeros[0] + numeros[1];
-    temp = temp * 2;
-    temp = temp / 3;
-    temp = temp % 5;
-    
-    // Usar función que retorna valor
-    estado = sumar(temp, 5);
-    
-    // Usar variables globales
-    contadorGlobal = estado;
-    valorPi = temp;
-    inicial = 'X';
-    
-    // Estructuras de control básicas
-    if (estado > 0) {
-        int auxiliar;
-        auxiliar = estado + 10;
-        estado = auxiliar;
-    }
-
-    int velocidad = 60;
-    int limite;
-    limite = velocidad;
-
-    int base = 10;
-    int negado;
-    negado = -base;
-
-    return estado;
-}
+int a = 2 + 3;
+int b = 4 * 5;
+int c = b;
+cout << a;
+cout << b;
+cout << c;

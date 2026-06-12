@@ -264,8 +264,6 @@ public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
     }
 
     private String handleBinaryOp(String left, String right, String op) {
-        String folded = opt1.tryFold(left, right, op);
-        if (folded != null) return folded;
         String temp = gen.nuevaTemp();
         gen.emitir(temp + " = " + left + " " + op + " " + right);
         return temp;
