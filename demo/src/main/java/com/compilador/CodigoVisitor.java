@@ -5,12 +5,10 @@ import java.util.List;
 
 public class CodigoVisitor extends MiLenguajeBaseVisitor<String> {
     private GeneradorCodigo gen;
-    private OptSimplificacionExpresiones opt1;
     private boolean enGlobal = true;
 
-    public CodigoVisitor(GeneradorCodigo gen, OptSimplificacionExpresiones opt1) {
+    public CodigoVisitor(GeneradorCodigo gen) {
         this.gen = gen;
-        this.opt1 = opt1;
     }
 
     @Override

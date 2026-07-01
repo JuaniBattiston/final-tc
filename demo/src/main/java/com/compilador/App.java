@@ -145,8 +145,7 @@ public class App {
                 System.out.println("\n=== FASE 4: GENERACION DE CODIGO INTERMEDIO ===\n");
 
                 GeneradorCodigo gen = new GeneradorCodigo();
-                OptSimplificacionExpresiones opt1 = new OptSimplificacionExpresiones();
-                CodigoVisitor visitor = new CodigoVisitor(gen, opt1);
+                CodigoVisitor visitor = new CodigoVisitor(gen);
                 visitor.visit(arbolParseo);
 
                 System.out.println("   Codigo de tres direcciones (ANTES de optimizaciones):\n");
@@ -158,6 +157,7 @@ public class App {
                 System.out.println("\n=== FASE 5: OPTIMIZACION DE CODIGO ===");
 
                 System.out.println("\n   OPT-1: Constant Folding");
+                OptSimplificacionExpresiones opt1 = new OptSimplificacionExpresiones();
                 List<String> folds = opt1.optimizar(gen.getInstrucciones());
                 gen.guardar(base + "_opt1.txt");
                 if (!folds.isEmpty()) {
